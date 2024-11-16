@@ -19,4 +19,3 @@ NLINES=$(grep -r $2 $1 | wc -l)
 echo "The number of files are $NFILES and the number of matching lines are $NLINES" 
 
 
-
