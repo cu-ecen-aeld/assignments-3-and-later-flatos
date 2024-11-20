@@ -1,3 +1,9 @@
+
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 #include "systemcalls.h"
 
 /**
@@ -16,8 +22,10 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-
-    return true;
+    int ret = system(cmd);
+    if (ret == 0)
+        return true;
+    return false;
 }
 
 /**
@@ -45,9 +53,11 @@ bool do_exec(int count, ...)
         command[i] = va_arg(args, char *);
     }
     command[count] = NULL;
+    va_end(args);
+
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
+    // command[count] = command[count];
 
 /*
  * TODO:
@@ -58,8 +68,31 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    fflush(stdout) ;
+    pid_t pid = fork();
+    if (pid == -1) {
+        return false;           // fork() failed
+    }
+    else if (pid == 0) {
+        // We're the child
+        int ret = execv(command[0], command);
+        if (ret == -1)
+            exit(-1);           // execv() failed, otherwise don't return
+    }
+    else {
+        // We're the parent
+        int wstatus;
+        pid_t ret = wait(&wstatus);
+        if (ret == -1)
+            return false;
+        if (WIFEXITED(wstatus)) {
+            if (WEXITSTATUS(wstatus) == 0)
+                return true;
+        }
+        return false;
+    }
 
-    va_end(args);
+
 
     return true;
 }
@@ -80,9 +113,10 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
         command[i] = va_arg(args, char *);
     }
     command[count] = NULL;
+    va_end(args);
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
+    // command[count] = command[count];
 
 
 /*
@@ -93,7 +127,41 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *
 */
 
-    va_end(args);
+    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
+    if (fd < 0)
+        return false;
+
+    fflush(stdout) ;
+    pid_t pid = fork();
+    if (pid == -1) {
+        return false;           // fork() failed
+    }
+    else if (pid == 0) {
+        // We're the child
+
+        // Point stdout in child to file we opened earlier
+        if (dup2(fd, 1) < 0)
+            exit(-1);           // dup2() failed, child exits
+        close(fd);              // Close fd in child...stdout points to same file
+        int ret = execv(command[0], command);
+        if (ret == -1)
+            exit(-1);           // execv() failed, otherwise don't return
+    }
+    else {
+        // We're the parent
+        close(fd);              // Close the fd...file is being used by child
+        int wstatus;
+        pid_t ret = wait(&wstatus);
+        if (ret == -1)
+            return false;
+        if (WIFEXITED(wstatus)) {
+            if (WEXITSTATUS(wstatus) == 0)
+                return true;
+        }
+        return false;
+    }
+
+
 
     return true;
 }
