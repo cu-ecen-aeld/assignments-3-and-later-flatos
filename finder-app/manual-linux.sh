@@ -79,6 +79,11 @@ fi
 make ARCH=${ARCH}  CROSS_COMPILE=${CROSS_COMPILE} 
 make CONFIG_PREFIX=${OUTDIR}/rootfs ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} install
 
+# busybox: setuid root?
+sudo chown root ${OUTDIR}/rootfs/bin/busybox
+sudo chmod 4555 ${OUTDIR}/rootfs/bin/busybox
+
+
 echo "Library dependencies"
 ${CROSS_COMPILE}readelf -a busybox | grep "program interpreter"
 # aarch64-none-linux-gnu-readelf -a bin/busybox | grep "program interpreter"
@@ -89,14 +94,19 @@ ${CROSS_COMPILE}readelf -a busybox | grep "Shared library"
 
 # # TODO: Add library dependencies to rootfs
 cd ${OUTDIR}/rootfs
-SYSROOT=/home/flatos/Projects/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/bin/../aarch64-none-linux-gnu/libc
-cp ${SYSROOT}/lib/ld-linux-aarch64.so.1 lib
-cp ${SYSROOT}/lib64/libm.so.6 lib64
-cp ${SYSROOT}/lib64/libresolv.so.2 lib64
-cp ${SYSROOT}/lib64/libc.so.6 lib64
+# SYSROOT=/home/flatos/Projects/arm-cross-compiler/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/bin/../aarch64-none-linux-gnu/libc
+# cp ${SYSROOT}/lib/ld-linux-aarch64.so.1 lib
+# cp ${SYSROOT}/lib64/libm.so.6 lib64
+# cp ${SYSROOT}/lib64/libresolv.so.2 lib64
+# cp ${SYSROOT}/lib64/libc.so.6 lib64
+cp ${FINDER_APP_DIR}/lib/ld-linux-aarch64.so.1 lib
+cp ${FINDER_APP_DIR}/lib64/libm.so.6 lib64
+cp ${FINDER_APP_DIR}/lib64/libresolv.so.2 lib64
+cp ${FINDER_APP_DIR}/lib64/libc.so.6 lib64
 
 
 # # TODO: Make device nodes
+cd ${OUTDIR}/rootfs
 sudo mknod  -m 666 dev/null c 1 3
 sudo mknod  -m 666 dev/console c 5 1
 
@@ -108,7 +118,10 @@ make CROSS_COMPILE=aarch64-none-linux-gnu-
 
 # # TODO: Copy the finder related scripts and executables to the /home directory
 # # on the target rootfs
-cp finder-test.sh finder.sh writer writer.sh ${OUTDIR}/rootfs
+mkdir -p ${OUTDIR}/rootfs/home
+cp finder-test.sh finder.sh writer writer.sh ${OUTDIR}/rootfs/home
+# mkdir -p ${OUTDIR}/rootfs/home/conf
+cp -r ../conf ${OUTDIR}/rootfs/home
 
 # # TODO: Chown the root directory
 sudo chown root:root ${OUTDIR}/rootfs
