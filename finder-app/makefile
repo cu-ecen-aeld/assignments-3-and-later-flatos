@@ -4,5 +4,5 @@ writer.o : writer.c
 	$(CROSS_COMPILE)gcc -c writer.c
 
 clean :
-	rm writer writer.o
+	rm -f writer writer.o
 	
