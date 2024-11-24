@@ -7,8 +7,10 @@ set -u
 
 NUMFILES=10
 WRITESTR=AELD_IS_FUN
-WRITEDIR=/tmp/aeld-data
-username=$(cat conf/username.txt)
+# WRITEDIR=/tmp/aeld-data
+WRITEDIR=/tmp							# ****
+# username=$(cat conf/username.txt)
+username=$(cat /etc/finder-app/conf/username.txt)
 
 if [ $# -lt 3 ]
 then
@@ -22,18 +24,20 @@ then
 else
 	NUMFILES=$1
 	WRITESTR=$2
-	WRITEDIR=/tmp/aeld-data/$3
+	# WRITEDIR=/tmp/aeld-data/$3
+	WRITEDIR=/tmp/$3
 fi
 
 MATCHSTR="The number of files are ${NUMFILES} and the number of matching lines are ${NUMFILES}"
 
 echo "Writing ${NUMFILES} files containing string ${WRITESTR} to ${WRITEDIR}"
 
-rm -rf "${WRITEDIR}"
+# rm -rf "${WRITEDIR}"		# ****
 
 # create $WRITEDIR if not assignment1
 # assignment=`cat ../conf/assignment.txt`
-assignment=`cat conf/assignment.txt`
+# assignment=`cat conf/assignment.txt`
+assignment=`cat /etc/finder-app/conf/assignment.txt`			# ***
 
 if [ $assignment != 'assignment1' ]
 then
@@ -61,7 +65,14 @@ done
 OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")
 
 # remove temporary directories
-rm -rf /tmp/aeld-data
+# rm -rf /tmp/aeld-data				# ****
+
+
+
+# Modify your finder-test.sh script to write a file with output of the finder command to /tmp/assignment4-result.txt
+echo ${OUTPUTSTRING} > /tmp/assignment4-result.txt
+
+
 
 set +e
 echo ${OUTPUTSTRING} | grep "${MATCHSTR}"
