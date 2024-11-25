@@ -7,8 +7,8 @@ set -u
 
 NUMFILES=10
 WRITESTR=AELD_IS_FUN
-# WRITEDIR=/tmp/aeld-data
-WRITEDIR=/tmp							# ****
+WRITEDIR=/tmp/aeld-data
+# WRITEDIR=/tmp							# ****
 # username=$(cat conf/username.txt)
 username=$(cat /etc/finder-app/conf/username.txt)
 
@@ -24,15 +24,15 @@ then
 else
 	NUMFILES=$1
 	WRITESTR=$2
-	# WRITEDIR=/tmp/aeld-data/$3
-	WRITEDIR=/tmp/$3
+	WRITEDIR=/tmp/aeld-data/$3
+	# WRITEDIR=/tmp/$3
 fi
 
 MATCHSTR="The number of files are ${NUMFILES} and the number of matching lines are ${NUMFILES}"
 
 echo "Writing ${NUMFILES} files containing string ${WRITESTR} to ${WRITEDIR}"
 
-# rm -rf "${WRITEDIR}"		# ****
+rm -rf "${WRITEDIR}"		# ****
 
 # create $WRITEDIR if not assignment1
 # assignment=`cat ../conf/assignment.txt`
