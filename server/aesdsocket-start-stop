@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# Starts aesdsocket as a daemon
+#
+
+DAEMON="aesdsocket"
+PIDFILE="/var/run/$DAEMON.pid"
+DAEMON_ARGS="-d"
+
+
+start() {
+	printf 'Starting %s: ' "$DAEMON"
+
+    # start-stop-daemon
+    #   -b background   only for progs that don't detach on their own
+    #   -m make pidfile  *only useful with -b option
+    #   -q quiet
+    #   -p pidfile
+    #   -S start -K stop
+    #   -x -exec are synonyms
+    start-stop-daemon -S -q -p "$PIDFILE" --exec "/usr/bin/$DAEMON" -- $DAEMON_ARGS
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+}
+
+stop() {
+	printf 'Stopping %s: ' "$DAEMON"
+	start-stop-daemon -K -q -p "$PIDFILE"
+
+}
+
+case "$1" in
+	start|stop)
+		"$1";;
+	*)
+		echo "Usage: $0 {start|stop}"
+		exit 1
+esac
+
