@@ -1,5 +1,5 @@
 
-// Test git
+//
 
 #include <stdio.h>
 #include <string.h>
@@ -17,6 +17,7 @@
 
 
 #define PORT_NUM "9000"
+
 
 static char *logfile = "/var/tmp/aesdsocketdata";
 static int sock_fd;

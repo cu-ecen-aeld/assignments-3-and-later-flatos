@@ -1,3 +1,4 @@
+GCC ?= gcc
 all:	aesdsocket
 aesdsocket : aesdsocket.o
 # $(CROSS_COMPILE)gcc -o aesdsocket aesdsocket.o 
