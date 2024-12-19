@@ -1,6 +1,6 @@
 /**
  * @file aesd-circular-buffer.c
- * @brief Functions and data related to a circular buffer imlementation
+ * @brief Functions and data related to a circular buffer implementation
  *
  * @author Dan Walkes
  * @date 2020-03-01
@@ -32,7 +32,25 @@ struct aesd_buffer_entry *aesd_circular_buffer_find_entry_offset_for_fpos(struct
     /**
     * TODO: implement per description
     */
+   if ((buffer->in_offs == buffer->out_offs) && (!buffer->full))
+        return NULL;            // Empty
+
+    size_t offset = 0;                                  // Offset from start of concatenated string segments in buffer
+    uint8_t entry = buffer->out_offs;                   // Next buffer entry to examine
+    do {
+        offset += buffer->entry[entry].size;            // String len including this buffer
+        if (char_offset < offset)                       // Break if we've got enough data
+            break;
+        entry = (entry + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
+    } while (entry != buffer->in_offs);
+
+    if (char_offset < offset)
+    {
+        *entry_offset_byte_rtn = char_offset - (offset - buffer->entry[entry].size);        // Offset within this buffer
+        return (buffer->entry + entry);                            // Pointer to this buffer
+    }
     return NULL;
+    
 }
 
 /**
@@ -47,6 +65,17 @@ void aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, const s
     /**
     * TODO: implement per description
     */
+    buffer->entry[buffer->in_offs].buffptr = add_entry->buffptr;
+    buffer->entry[buffer->in_offs].size = add_entry->size;
+    buffer->in_offs += 1;
+    if (buffer->in_offs == AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED) 
+        buffer->in_offs = 0;
+    if (buffer->full) 
+        buffer->out_offs = buffer->in_offs;
+    
+    if (buffer->in_offs == buffer->out_offs)
+        buffer->full = true;
+
 }
 
 /**
