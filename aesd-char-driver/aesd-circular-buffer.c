@@ -65,9 +65,9 @@ const char* aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, 
     /**
     * TODO: implement per description
     */
-   const char *retval = NULL;           // If we're overwriting an entry, pass buffer to caller for freeing
-   if (buffer->full)
-    retval = buffer->entry[buffer->in_offs].buffptr;
+    const char *retval = NULL;           // If we're overwriting an entry, pass buffer to caller for freeing
+    if (buffer->full)
+        retval = buffer->entry[buffer->in_offs].buffptr;
 
     buffer->entry[buffer->in_offs].buffptr = add_entry->buffptr;
     buffer->entry[buffer->in_offs].size = add_entry->size;
@@ -76,7 +76,7 @@ const char* aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, 
         buffer->in_offs = 0;
     if (buffer->full) 
         buffer->out_offs = buffer->in_offs;
-    
+
     if (buffer->in_offs == buffer->out_offs)
         buffer->full = true;
 
