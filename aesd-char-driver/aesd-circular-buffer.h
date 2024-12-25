@@ -15,6 +15,7 @@
 #include <stdint.h> // uintx_t
 #include <stdbool.h>
 #endif
+#include "aesd-circular-buffer.h"
 
 #define AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED 10
 
