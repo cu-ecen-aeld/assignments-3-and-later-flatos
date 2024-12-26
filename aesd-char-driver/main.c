@@ -234,9 +234,6 @@ errout:
 
 
 
-
-
-
 struct file_operations aesd_fops = {
     .owner =    THIS_MODULE,
     .read =     aesd_read,
