@@ -134,33 +134,34 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     if (count == 0)                 // Prob not necessary...
         goto out;
     
-    if (aesd_device.part_entry.buffptr == NULL)
-    {
-        // Allocate a new parial entry
-        aesd_device.part_entry.buffptr = kmalloc(count, GFP_KERNEL);
-		if (!aesd_device.part_entry.buffptr)
-			goto errout;
-        aesd_device.part_entry.size = count;
-        aesd_device.part_entry.offset = 0;
-    }
+    // If no partial-entry buffer exists it'll be created by krealloc()
+    // if (aesd_device.part_entry.buffptr == NULL)
+    // {
+    //     // // Allocate a new parial entry
+    //     // aesd_device.part_entry.buffptr = kmalloc(count, GFP_KERNEL);
+	// 	// if (!aesd_device.part_entry.buffptr)
+	// 	// 	goto errout;
+    //     aesd_device.part_entry.size = count;
+    //     aesd_device.part_entry.offset = 0;
+    // }
 
-    // Now we have either a new or previously-existing buffer for data
-    // Resize to accomodate new data
-    needed = aesd_device.part_entry.offset + count;              // Total bytes we need space for
-    if (needed > aesd_device.part_entry.size)
-    {
-        aesd_device.part_entry.buffptr = krealloc(aesd_device.part_entry.buffptr, needed, GFP_KERNEL);
-		if (!aesd_device.part_entry.buffptr)
-			goto errout;
-        aesd_device.part_entry.size = needed;
-    }
+    // Create or resize the partial-entry buffer for new data
+    needed = aesd_device.part_entry.size + count;               // Total bytes we need space for
+    // if (needed > aesd_device.part_entry.size)
+    // {
+    aesd_device.part_entry.buffptr = krealloc(aesd_device.part_entry.buffptr, needed, GFP_KERNEL);
+    if (!aesd_device.part_entry.buffptr)
+        goto errout;
+    // }
 
     // Copy/append new data
-	if (copy_from_user((char*)aesd_device.part_entry.buffptr + aesd_device.part_entry.offset, buf, count)) {
+	if (copy_from_user((char*)aesd_device.part_entry.buffptr + aesd_device.part_entry.size, buf, count)) {
 		retval = -EFAULT;
 		goto errout;
 	}
-    aesd_device.part_entry.offset += count;
+    // aesd_device.part_entry.offset += count;
+    aesd_device.part_entry.size = needed;
+
 
     // If data ends in '\n', add new entry to circular buffer
     // If not, we're done
@@ -169,7 +170,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
          // Add to circ buf
         const char* removed_buf = aesd_circular_buffer_add_entry(&aesd_device.cbuf, &aesd_device.part_entry);
         kfree(removed_buf);     // Might be NULL...kfree doesn't care
-        aesd_device.part_entry.buffptr == NULL;     // Partial entry is now empty
+        aesd_device.part_entry.buffptr = NULL;          // Partial entry is now empty
+        aesd_device.part_entry.size = 0;  
     }
 
 out:
@@ -232,7 +234,7 @@ int aesd_init_module(void)
     mutex_init(&aesd_device.lock);
     
 
-    result = aesd_setup_cdev(&aesd_device);
+    result = aesd_setup_cdev(&aesd_device.cdev);
 
     if( result ) {
         unregister_chrdev_region(dev, 1);

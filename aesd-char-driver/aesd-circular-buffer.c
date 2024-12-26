@@ -72,6 +72,7 @@ const char* aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, 
 
     buffer->entry[buffer->in_offs].buffptr = add_entry->buffptr;
     buffer->entry[buffer->in_offs].size = add_entry->size;
+    buffer->entry[buffer->in_offs].offset = add_entry->offset;
     buffer->in_offs += 1;
     if (buffer->in_offs == AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED) 
         buffer->in_offs = 0;
@@ -92,11 +93,12 @@ const char* aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, 
 */
 struct aesd_buffer_entry  aesd_circular_buffer_remove_entry(struct aesd_circular_buffer *buffer)
 {
-    struct aesd_buffer_entry retval = {.buffptr=NULL, .size=0};
+    struct aesd_buffer_entry retval = {.buffptr=NULL, .size=0, .offset=0};
     if ((buffer->out_offs == buffer->in_offs) && !buffer->full)             // Empty
         return retval;
 
     retval = buffer->entry[buffer->out_offs];
+    buffer->entry[buffer->out_offs].buffptr = NULL;         // Don't want to double-free memory on cleanup
     buffer->out_offs += 1;
     if (buffer->out_offs == AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED) 
         buffer->out_offs = 0;
@@ -113,12 +115,14 @@ struct aesd_buffer_entry  aesd_circular_buffer_remove_entry(struct aesd_circular
 */
 size_t aesd_circular_buffer_data_available(struct aesd_circular_buffer *buffer)
 {
-    struct aesd_buffer_entry *next;
+    // struct aesd_buffer_entry *next;
     if ((buffer->out_offs == buffer->in_offs) && !buffer->full)             // Empty
         return 0;
 
-    next = &buffer->entry[buffer->out_offs];
-    return (next->size - next->offset);
+    // next = &buffer->entry[buffer->out_offs];
+    // return (next->size - next->offset);
+
+    return ((buffer->entry[buffer->out_offs]).size - (buffer->entry[buffer->out_offs]).offset);
 }
 
 
