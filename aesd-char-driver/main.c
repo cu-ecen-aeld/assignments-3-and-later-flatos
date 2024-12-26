@@ -89,6 +89,8 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
         retval = -EFAULT;
         goto out;
     }
+    *f_pos = *f_pos + retval;           // Update file position
+#warning "*** main.c ***"
 
   out:
 	mutex_unlock(&aesd_device.lock);
