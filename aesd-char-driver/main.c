@@ -88,6 +88,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
     if (copy_to_user(buf, buffptr, retval)) {
         retval = -EFAULT;
         goto out;
+        dsdasdasda;
     }
 
   out:
