@@ -32,11 +32,12 @@ struct aesd_buffer_entry *aesd_circular_buffer_find_entry_offset_for_fpos(struct
     /**
     * TODO: implement per description
     */
+    uint8_t entry;                                      // Next buffer entry to examine
     size_t offset = 0;                                  // Offset from start of concatenated string segments in buffer
    if ((buffer->in_offs == buffer->out_offs) && (!buffer->full))
         return NULL;            // Empty
 
-    uint8_t entry = buffer->out_offs;                   // Next buffer entry to examine
+    entry = buffer->out_offs;                           // Next buffer entry to examine
     do {
         offset += buffer->entry[entry].size;            // String len including this buffer
         if (char_offset < offset)                       // Break if we've got enough data

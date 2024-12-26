@@ -58,6 +58,7 @@ int aesd_release(struct inode *inode, struct file *filp)
 ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
                 loff_t *f_pos)
 {
+    size_t avail;
     ssize_t retval = 0;
     PDEBUG("read %zu bytes with offset %lld",count,*f_pos);
     /**
@@ -68,7 +69,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
 		return -ERESTARTSYS;
 
     // Any data available? If not, return 0
-    size_t avail = aesd_circular_buffer_data_available(&aesd_device.cbuf);
+    avail = aesd_circular_buffer_data_available(&aesd_device.cbuf);
     if (avail == 0)
         goto out;
 
@@ -155,7 +156,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     }
 
     // Copy/append new data
-	if (copy_from_user(aesd_device.part_entry.buffptr + aesd_device.part_entry.offset, buf, count)) {
+	if (copy_from_user((char*)aesd_device.part_entry.buffptr + aesd_device.part_entry.offset, buf, count)) {
 		retval = -EFAULT;
 		goto errout;
 	}
