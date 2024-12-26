@@ -55,10 +55,19 @@ int aesd_release(struct inode *inode, struct file *filp)
     return 0;
 }
 
+
+
+
+//
+// aesd_read(), second try
+// Don't remove data from circular buffer,
+//  just return data starting at 'f_pos' offset pointer
+//
 ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
                 loff_t *f_pos)
 {
     size_t avail;
+    const char *buffptr;
     ssize_t retval = 0;
     PDEBUG("read %zu bytes with offset %lld",count,*f_pos);
     /**
@@ -69,44 +78,82 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
 		return -ERESTARTSYS;
 
     // Any data available? If not, return 0
-    avail = aesd_circular_buffer_data_available(&aesd_device.cbuf);
+    buffptr = aesd_circular_buffer_read(&aesd_device.cbuf, (size_t)*f_pos, &avail);
     if (avail == 0)
         goto out;
 
-// *** Could be partial buffer of data in aesd_device.part_entry
-//      But we're ignoring that (just wait until a 'write' puts the full entry into circular buffer)
-//      May have to rethink this if grader objects...
-
-
-    // If first buffer contains amount of data requested or less, return entire buffer
-    if (avail <= count)
-    {
-        // Return full entry, and remove it from buffer
-        struct aesd_buffer_entry entry = aesd_circular_buffer_remove_entry(&aesd_device.cbuf);
-        retval = avail;
-    	if (copy_to_user(buf, entry.buffptr + entry.offset, avail)) {
-		    retval = -EFAULT;
-		    goto out;
-	    }
-        kfree(entry.buffptr);
-    }
-
-    // First entry has more data than we want, so read part of it (don't remove entry from buffer)
-    else {
-        struct aesd_buffer_entry entry = aesd_circular_buffer_read_partial(&aesd_device.cbuf, count);
+    retval = avail;
+    if (count < avail)
         retval = count;
-        if (copy_to_user(buf, entry.buffptr + entry.offset, count)) {
-		    retval = -EFAULT;
-		    goto out;
-	    }
+    if (copy_to_user(buf, buffptr, retval)) {
+        retval = -EFAULT;
+        goto out;
     }
-
 
   out:
 	mutex_unlock(&aesd_device.lock);
 	return retval;
 
 }
+
+
+// ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
+//                 loff_t *f_pos)
+// {
+//     size_t avail;
+//     ssize_t retval = 0;
+//     PDEBUG("read %zu bytes with offset %lld",count,*f_pos);
+//     /**
+//      * TODO: handle read
+//      */
+
+// 	if (mutex_lock_interruptible(&aesd_device.lock))
+// 		return -ERESTARTSYS;
+
+//     // Any data available? If not, return 0
+//     avail = aesd_circular_buffer_data_available(&aesd_device.cbuf);
+//     if (avail == 0)
+//         goto out;
+
+// // *** Could be partial buffer of data in aesd_device.part_entry
+// //      But we're ignoring that (just wait until a 'write' puts the full entry into circular buffer)
+// //      May have to rethink this if grader objects...
+
+
+//     // If first buffer contains amount of data requested or less, return entire buffer
+//     if (avail <= count)
+//     {
+//         // Return full entry, and remove it from buffer
+//         struct aesd_buffer_entry entry = aesd_circular_buffer_remove_entry(&aesd_device.cbuf);
+//         retval = avail;
+//     	if (copy_to_user(buf, entry.buffptr + entry.offset, avail)) {
+// 		    retval = -EFAULT;
+// 		    goto out;
+// 	    }
+//         kfree(entry.buffptr);
+//     }
+
+//     // First entry has more data than we want, so read part of it (don't remove entry from buffer)
+//     else {
+//         struct aesd_buffer_entry entry = aesd_circular_buffer_read_partial(&aesd_device.cbuf, count);
+//         retval = count;
+//         if (copy_to_user(buf, entry.buffptr + entry.offset, count)) {
+// 		    retval = -EFAULT;
+// 		    goto out;
+// 	    }
+//     }
+
+
+//   out:
+// 	mutex_unlock(&aesd_device.lock);
+// 	return retval;
+
+// }
+
+
+
+
+
 
 
 ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,

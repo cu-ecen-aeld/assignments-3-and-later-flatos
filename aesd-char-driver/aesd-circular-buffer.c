@@ -142,6 +142,57 @@ struct aesd_buffer_entry  aesd_circular_buffer_read_partial(struct aesd_circular
 }
 
 
+const char* aesd_circular_buffer_read(struct aesd_circular_buffer* buffer, size_t f_pos, size_t* avail)
+{
+    size_t buf_start_pos;
+    uint8_t curbuf;
+    
+    if ((buffer->out_offs == buffer->in_offs) && !buffer->full)             // Empty
+    {
+        *avail = 0;
+        return NULL;
+    } 
+
+    // Find buffer that contains requested offset
+    buf_start_pos = 0;
+    curbuf = buffer->out_offs;
+    while (true)
+    {
+        if (f_pos < (buf_start_pos + buffer->entry[curbuf].size))
+        {
+            *avail = buffer->entry[curbuf].size - (f_pos - buf_start_pos);
+            return buffer->entry[curbuf].buffptr + (f_pos - buf_start_pos);
+        }
+
+        buf_start_pos += buffer->entry[curbuf].size;
+        curbuf += 1;
+        if (curbuf == AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED) 
+            curbuf = 0;
+
+        if (curbuf == buffer->in_offs)              // Reached end
+        {
+            *avail = 0;
+            return NULL;
+        } 
+
+    }
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
 /**
 * Initializes the circular buffer described by @param buffer to an empty struct
 */

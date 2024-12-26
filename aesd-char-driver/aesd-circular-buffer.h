@@ -65,6 +65,10 @@ extern struct aesd_buffer_entry  aesd_circular_buffer_remove_entry(struct aesd_c
 extern struct aesd_buffer_entry  aesd_circular_buffer_read_partial(struct aesd_circular_buffer *buffer, size_t count);
 extern size_t aesd_circular_buffer_data_available(struct aesd_circular_buffer *buffer);
 
+
+extern const char* aesd_circular_buffer_read(struct aesd_circular_buffer* cbuf, size_t f_pos, size_t* avail);
+
+
 /**
  * Create a for loop to iterate over each member of the circular buffer.
  * Useful when you've allocated memory for circular buffer entries and need to free it
