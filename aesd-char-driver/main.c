@@ -64,7 +64,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
      * TODO: handle read
      */
 
-	if (mutex_lock_interruptible(&aesd_device->lock))
+	if (mutex_lock_interruptible(&aesd_device.lock))
 		return -ERESTARTSYS;
 
     // Any data available? If not, return 0
@@ -102,7 +102,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
 
 
   out:
-	mutex_unlock(&aesd_device->lock);
+	mutex_unlock(&aesd_device.lock);
 	return retval;
 
 }
@@ -111,16 +111,17 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
 ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
                 loff_t *f_pos)
 {
-    ssize_t retval = -ENOMEM;
+
+	ssize_t retval = -ENOMEM; /* value used in "goto out" statements */
+    size_t needed;
     PDEBUG("write %zu bytes with offset %lld",count,*f_pos);
     /**
      * TODO: handle write
      */
 
 
-	ssize_t retval = -ENOMEM; /* value used in "goto out" statements */
 
-	if (mutex_lock_interruptible(&aesd_device->lock))
+	if (mutex_lock_interruptible(&aesd_device.lock))
 		return -ERESTARTSYS;
 
 
@@ -144,7 +145,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
 
     // Now we have either a new or previously-existing buffer for data
     // Resize to accomodate new data
-    size_t needed = aesd_device.part_entry.offset + count;              // Total bytes we need space for
+    needed = aesd_device.part_entry.offset + count;              // Total bytes we need space for
     if (needed > aesd_device.part_entry.size)
     {
         aesd_device.part_entry.buffptr = krealloc(aesd_device.part_entry.buffptr, needed, GFP_KERNEL);
@@ -154,7 +155,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     }
 
     // Copy/append new data
-	if (copy_from_user(aesd_device.part_entry.buffptr + offset, buf, count)) {
+	if (copy_from_user(aesd_device.part_entry.buffptr + aesd_device.part_entry.offset, buf, count)) {
 		retval = -EFAULT;
 		goto errout;
 	}
@@ -162,7 +163,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
 
     // If data ends in '\n', add new entry to circular buffer
     // If not, we're done
-    if (aesd_device.part_entry.buffptr[size - 1] == '\n'
+    if (aesd_device.part_entry.buffptr[aesd_device.part_entry.size - 1] == '\n')
     {
          // Add to circ buf
         const char* removed_buf = aesd_circular_buffer_add_entry(&aesd_device.cbuf, &aesd_device.part_entry);
@@ -173,7 +174,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
 out:
     retval = count;
 errout:
-	mutex_unlock(&dev->lock);
+	mutex_unlock(&aesd_device.lock);
 	return retval;
 }
 
@@ -241,6 +242,7 @@ int aesd_init_module(void)
 
 void aesd_cleanup_module(void)
 {
+    struct aesd_buffer_entry entry;
     dev_t devno = MKDEV(aesd_major, aesd_minor);
 
     cdev_del(&aesd_device.cdev);
@@ -248,7 +250,6 @@ void aesd_cleanup_module(void)
     /**
      * TODO: cleanup AESD specific poritions here as necessary
      */
-    struct aesd_buffer_entry entry;
     while (true)
     {
         entry = aesd_circular_buffer_remove_entry(&aesd_device.cbuf);

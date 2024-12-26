@@ -32,10 +32,10 @@ struct aesd_buffer_entry *aesd_circular_buffer_find_entry_offset_for_fpos(struct
     /**
     * TODO: implement per description
     */
+    size_t offset = 0;                                  // Offset from start of concatenated string segments in buffer
    if ((buffer->in_offs == buffer->out_offs) && (!buffer->full))
         return NULL;            // Empty
 
-    size_t offset = 0;                                  // Offset from start of concatenated string segments in buffer
     uint8_t entry = buffer->out_offs;                   // Next buffer entry to examine
     do {
         offset += buffer->entry[entry].size;            // String len including this buffer
@@ -112,10 +112,11 @@ struct aesd_buffer_entry  aesd_circular_buffer_remove_entry(struct aesd_circular
 */
 size_t aesd_circular_buffer_data_available(struct aesd_circular_buffer *buffer)
 {
+    struct aesd_buffer_entry *next;
     if ((buffer->out_offs == buffer->in_offs) && !buffer->full)             // Empty
         return 0;
 
-    struct aesd_buffer_entry *next = &buffer->entry[buffer->out_offs];
+    next = &buffer->entry[buffer->out_offs];
     return (next->size - next->offset);
 }
 
