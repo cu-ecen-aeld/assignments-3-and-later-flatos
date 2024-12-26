@@ -234,7 +234,7 @@ int aesd_init_module(void)
     mutex_init(&aesd_device.lock);
     
 
-    result = aesd_setup_cdev(&aesd_device.cdev);
+    result = aesd_setup_cdev(&aesd_device);
 
     if( result ) {
         unregister_chrdev_region(dev, 1);
