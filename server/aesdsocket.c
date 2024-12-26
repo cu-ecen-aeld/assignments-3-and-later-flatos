@@ -19,12 +19,15 @@
 #include <sys/timerfd.h>
 #include <poll.h>
 
+#ifndef USE_AESD_CHAR_DEVICE
+#define USE_AESD_CHAR_DEVICE 1
+#endif
 
 
 #define PORT_NUM "9000"
 #define TIME_INTERVAL_MS 10000
 
-#ifdef USE_AESD_CHAR_DEVICE
+#if USE_AESD_CHAR_DEVICE
 static char *logfile = "/dev/aesdchar";
 #else
 static char *logfile = "/var/tmp/aesdsocketdata";
@@ -480,7 +483,8 @@ int main(int argc, char**argv)
             strftime(buf, 128, "%Y %m %d %H %M %S", tmp);
             char sbuf[256];
             sprintf(sbuf, "timestamp:%s\n", buf);
-#ifndef USE_AESD_CHAR_DEVICE            
+#if USE_AESD_CHAR_DEVICE       
+#else     
             write_log(sbuf, strlen(sbuf));
 #endif            
 
@@ -547,7 +551,8 @@ int main(int argc, char**argv)
 
 
 
-#ifndef USE_AESD_CHAR_DEVICE                
+#if USE_AESD_CHAR_DEVICE            
+#else   
             unlink(logfile);                    // Delete log file
 #endif            
             syslog(LOG_DEBUG, "Caught signal, exiting");
