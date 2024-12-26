@@ -20,15 +20,11 @@
 #include <poll.h>
 
 
-
 #define PORT_NUM "9000"
 #define TIME_INTERVAL_MS 10000
 
-#ifdef USE_AESD_CHAR_DEVICE
-static char *logfile = "/dev/aesdchar";
-#else
+
 static char *logfile = "/var/tmp/aesdsocketdata";
-#endif
 static int sock_fd;
 static int terminate_flg;
 static pthread_mutex_t logfile_mutex  = PTHREAD_MUTEX_INITIALIZER;
@@ -480,9 +476,7 @@ int main(int argc, char**argv)
             strftime(buf, 128, "%Y %m %d %H %M %S", tmp);
             char sbuf[256];
             sprintf(sbuf, "timestamp:%s\n", buf);
-#ifndef USE_AESD_CHAR_DEVICE            
             write_log(sbuf, strlen(sbuf));
-#endif            
 
         }
 
@@ -546,9 +540,8 @@ int main(int argc, char**argv)
 
 
 
-#ifndef USE_AESD_CHAR_DEVICE                
+    
             unlink(logfile);                    // Delete log file
-#endif            
             syslog(LOG_DEBUG, "Caught signal, exiting");
             closelog();
             _exit(0);
