@@ -11,13 +11,27 @@ else
     group="wheel"
 fi
 
-if [ -e ${module}.ko ]; then
-    echo "Loading local built file ${module}.ko"
-    insmod ./$module.ko $* || exit 1
-else
-    echo "Local file ${module}.ko not found, attempting to modprobe"
-    modprobe ${module} || exit 1
+
+
+kernel_ver=$(uname -r)
+module_dir="/lib/modules/$kernel_ver/extra"
+if [ ! -d "$module_dir" ]; then
+    echo "Module directory not found: $module_dir"
+    exit 1
 fi
+# invoke insmod with all arguments we got
+# and use a pathname, as insmod doesn't look in . by default
+insmod $module_dir/$module.ko $* || exit 1
+
+
+
+# if [ -e ${module}.ko ]; then
+#     echo "Loading local built file ${module}.ko"
+#     insmod ./$module.ko $* || exit 1
+# else
+#     echo "Local file ${module}.ko not found, attempting to modprobe"
+#     modprobe ${module} || exit 1
+# fi
 major=$(awk "\$2==\"$module\" {print \$1}" /proc/devices)
 rm -f /dev/${device}
 mknod /dev/${device} c $major 0
