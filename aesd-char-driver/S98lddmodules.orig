@@ -1,0 +1,23 @@
+#! /bin/sh
+
+case $1 in 
+    start)
+        echo "Loading drivers"
+        scull_load
+        aesdchar_load
+        module_load faulty
+        modprobe hello
+        ;;
+    stop)
+        echo "Stopping drivers"
+        scull_unload
+        aesdchar_unload
+        module_unload faulty
+        rmmod hello
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+    exit 1
+esac
+
+exit 0
